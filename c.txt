@@ -1,0 +1,237 @@
+#include <iostream>
+#include <string>
+#include <map>
+
+class Account {
+private:
+    std::string accountNumber;
+    std::string name;
+    double balance;
+
+public:
+    // Constructor
+    Account(std::string accNumber, std::string accName) : accountNumber(accNumber), name(accName), balance(0.0) {}
+
+    // Deposit money into the account
+    void deposit(double amount) {
+        balance += amount;
+        std::cout << "Amount " << amount << " deposited. Current balance: " << balance << std::endl;
+    }
+
+    // Withdraw money from the account
+    void withdraw(double amount) {
+        if (balance >= amount) {
+            balance -= amount;
+            std::cout << "Amount " << amount << " withdrawn. Current balance: " << balance << std::endl;
+        } else {
+            std::cout << "Insufficient balance!" << std::endl;
+        }
+    }
+
+    // Check the balance of the account
+    void checkBalance() {
+        std::cout << "Account balance: " << balance << std::endl;
+    }
+};
+
+class Bank {
+private:
+    std::map<std::string, Account> accounts;
+
+public:
+    // Create a new account
+    void createAccount(std::string accNumber, std::string accName) {
+        if (accounts.find(accNumber) == accounts.end()) {
+            accounts[accNumber] = Account(accNumber, accName);
+            std::cout << "Account created successfully." << std::endl;
+        } else {
+            std::cout << "Account already exists with the given account number." << std::endl;
+        }
+    }
+
+    // Deposit money into an account
+    void deposit(std::string accNumber, double amount) {
+        if (accounts.find(accNumber) != accounts.end()) {
+            accounts[accNumber].deposit(amount);
+        } else {
+            std::cout << "Account does not exist with the given account number." << std::endl;
+        }
+    }
+
+    // Withdraw money from an account
+    void withdraw(std::string accNumber, double amount) {
+        if (accounts.find(accNumber) != accounts.end()) {
+            accounts[accNumber].withdraw(amount);
+        } else {
+            std::cout << "Account does not exist with the given account number." << std::endl;
+        }
+    }
+
+    // Check the balance of an account
+    void checkBalance(std::string accNumber) {
+        if (accounts.find(accNumber) != accounts.end()) {
+            accounts[accNumber].checkBalance();
+        } else {
+            std::cout << "Account does not exist with the given account number." << std::endl;
+        }
+    }
+};
+
+int main() {
+    Bank bank;
+    std::string accNumber, accName;
+    double amount;
+
+    // Menu-driven interface
+    int choice;
+    do {
+        std::cout << "\nBanking System Menu\n";
+        std::cout << "1. Create Account\n";
+        std::cout << "2. Deposit\n";
+        std::cout << "3. Withdraw\n";
+        std::cout << "4. Check Balance\n";
+        std::cout << "5. Exit\n";
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+            case 1:
+                std::cout << "Enter account number: ";
+                std::cin >> accNumber;
+                std::cout << "Enter account holder name: ";
+                std::cin >> accName;
+                bank.createAccount(accNumber, accName);
+                break;
+            case 2:
+                std::cout << "Enter account number: ";
+                std::cin >> accNumber;
+                std::cout << "Enter amount to deposit: ";
+                std::cin >> amount;
+                bank.deposit(accNumber, amount);
+                break;
+            case 3:
+                std::cout << "Enter account number: ";
+                std::cin >> accNumber;
+                std::cout << "Enter amount to withdraw: ";
+                std::cin >> amount;
+                bank.withdraw(accNumber, amount);
+                break;
+            case 4:
+                std::cout << "Enter account number: ";
+                std::cin >> accNumber;
+                bank.checkBalance(accNumber);
+                break;
+            case 5:
+                std::cout << "Exiting program." << std::endl;
+                break;
+            default:
+                std::cout << "Invalid choice. Please enter a number between 1 and 5." << std::endl;
+        }
+    } while (choice != 5);
+
+    return 0;
+}
+
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+#include <iostream>
+
+int main() {
+    // Example of a 2D array (matrix)
+    const int rows = 3;
+    const int cols = 3;
+    int matrix[rows][cols] = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
+
+    // Accessing elements of a 2D array
+    std::cout << "Matrix elements:" << std::endl;
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            std::cout << matrix[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    // Example of a 3D array
+    const int x = 2;
+    const int y = 2;
+    const int z = 2;
+    int cube[x][y][z] = {
+        {
+            {1, 2},
+            {3, 4}
+        },
+        {
+            {5, 6},
+            {7, 8}
+        }
+    };
+
+    // Accessing elements of a 3D array
+    std::cout << "\nCube elements:" << std::endl;
+    for (int i = 0; i < x; ++i) {
+        for (int j = 0; j < y; ++j) {
+            for (int k = 0; k < z; ++k) {
+                std::cout << cube[i][j][k] << " ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << std::endl;
+    }
+
+    return 0;
+}
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+#include <iostream>
+
+// Function to print numbers from 1 to n using a for loop
+void printNumbers(int n) {
+    for (int i = 1; i <= n; ++i) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
+}
+
+int main() {
+    int n;
+    std::cout << "Enter a number: ";
+    std::cin >> n;
+
+    // Call the function to print numbers from 1 to n
+    printNumbers(n);
+
+    return 0;
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+#include <iostream>
+
+// Function to calculate the sum of numbers from 1 to n using a for loop
+int sumNumbers(int n) {
+    int sum = 0;
+    for (int i = 1; i <= n; ++i) {
+        sum += i;
+    }
+    return sum;
+}
+
+int main() {
+    int n;
+    std::cout << "Enter a number: ";
+    std::cin >> n;
+
+    // Call the function to calculate the sum of numbers from 1 to n
+    int result = sumNumbers(n);
+
+    std::cout << "Sum of numbers from 1 to " << n << " is: " << result << std::endl;
+
+    return 0;
+}
