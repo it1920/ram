@@ -237,7 +237,7 @@ image = imread('8.png');
 imshow(image);
 
 b. Read and display figure
-imageTwo = imread('C:\Users\SGSey\Desktop\Misc\Meetup51.png');
+imageTwo = imread('51.png');
 imshow(imageTwo);
 
 c. Display the histogram of 2.
