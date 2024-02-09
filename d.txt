@@ -229,4 +229,98 @@ subplot(2, 3, 6),imshow(border);
 function rimg=addtwoimages(im1,im2)
 rimg=im1+im2;
 end
- 
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+a. Read and display figure
+image = imread('8.png');
+imshow(image);
+
+b. Read and display figure
+imageTwo = imread('C:\Users\SGSey\Desktop\Misc\Meetup51.png');
+imshow(imageTwo);
+
+c. Display the histogram of 2.
+imhist(imageTwo);
+
+d. Histogram Matching
+equalized = histeq(im2double(image));
+imshow(equalized);
+equalizedTwo = histeq(im2double(imageTwo));
+imshow(equalizedTwo);
+
+
+a. Read and display the image
+image = imread('98.png');
+imshow(image);
+
+b. change to greyscale
+greyscale = im2gray(image);
+imshow(image);
+
+c. Enhance contrast using imadjust and stretchlim
+lims = stretchlim(greyscale, [0.01, 0.99]);
+enhanced = imadjust(greyscale, lims, []);
+imshow(image);
+title('Original Image');
+imshow(enhanced);
+title('Contrast Enhanced Image');
+
+d. Use Histogram Equalization
+histEqEnhanced = histeq(enhanced);
+
+e. Display the img and histogram
+imshow(histEqEnhanced);
+title('Histogram Equalized')
+imhist(histEqEnhanced);
+
+
+a. Extract the boundary by calculating the perimeter
+image = imread('1.png');
+grayscaleImg = rgb2gray(image);
+binaryImg = imbinarize(grayscaleImg);
+perimeter = bwperim(binaryImg);
+imshow(perimeter);
+se = strel('square', 12);
+eroded = imerode(image, se);
+outline = image - eroded;
+imshow(outline);
+
+b. Opening, subtract, contrast improvement
+opened = imopen(grayscaleImg, se);
+nobg = grayscaleImg - (grayscaleImg - opened);
+imshow(nobg);
+
+
+image = imread('1.png');
+grayscaleImg = rgb2gray(image);
+
+
+a. Get the Edge using Laplacian of Gaussian
+% Define the standard deviation (sigma) for the LoG filter
+sigma = 2;
+% Apply the LoG filter
+logFiltered = imfilter(double(grayscaleImg), fspecial('log', round(6*sigma+1), sigma), 'same', 'conv');
+% Normalize the filtered image to display
+logFiltered = (logFiltered - min(logFiltered(:))) / (max(logFiltered(:)) - min(logFiltered(:)));
+% Convert the filtered image to binary by thresholding
+threshold = 0.5; % Adjust this threshold as needed
+binaryImage = logFiltered > threshold;
+% Display the original image and its edge detected version
+imshow(grayscaleImg);
+title('Original Image');
+imshow(binaryImage);
+title('Edge Detected Image');
+
+
+b. Get the Edge using Canny Edge Detection
+edge(grayscaleImg, 'Canny');
+
+
+c. Do Gaussian Low Pass Filter
+filterSize = 30;
+sigma = 12;
+gaussianKernel = fspecial('gaussian', [filterSize, filterSize], sigma);
+% Apply the Gaussian filter using imfilter
+filter6 = imfilter(grayscaleImg, gaussianKernel, 'conv');
+imshow(filter6);
