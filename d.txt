@@ -1,0 +1,232 @@
+img1 = imread('cell.tif');
+ imsu = imsubtract(img1, 100);
+ subplot(1, 2, 1),imshow(img1);
+ title('Original image');
+ subplot(1, 2, 2),imshow(imsu);
+ title('Subtracted image');
+ 
+ imgdouble = im2double(img1);
+ im1g1 = 2 * (imgdouble.^0.75);
+ im1g2 = 2 * (imgdouble.^1.25);
+ im1g3 = 2 * (imgdouble.^2.5);
+ figure;
+ subplot(2, 2, 1);imshow(imgdouble);
+ title('Double image');
+ subplot(2, 2, 2);imshow(im1g1);
+ title('Gamma = 0.75');
+ subplot(2, 2, 3);imshow(im1g2);
+ title('Gamma = 1.25');
+ subplot(2, 2, 4);imshow(im1g3);
+ title('Gamma = 2.5');
+ 
+  myexpimage1 = 3 * ((1 + 0.15).^imgdouble - 1);
+ myexpimage2 = 3 * ((1 + 0.25).^imgdouble - 1);
+ myexpimage3 = 3 * ((1 + 0.35).^imgdouble - 1);
+ figure;
+ subplot(2,2,1);
+ imshow(imgdouble);
+ title('Original Image');
+ subplot(2,2,2);
+ imshow(myexpimage1);
+ title('exp=0.15');
+ subplot(2,2,3);
+ imshow(myexpimage2);
+ title('exp=0.25');
+ subplot(2,2,4);
+ imshow(myexpimage3);
+title('  exp=0.35 ');
+ 
+  % Convert the image to grayscale if it's a color image
+ if size(img1, 3) == 3
+    grayImage = rgb2gray(img1);
+ else
+    grayImage = img1;
+ end
+ % Get the threshold value using graythresh
+ threshold_auto = graythresh(grayImage);
+ % Apply thresholding
+ binaryImgA = imbinarize(grayImage, threshold_auto);
+ binaryImg1= imbinarize(grayImage, 0.3);
+ binaryImg2 = imbinarize(grayImage, 0.6);
+ figure;
+ % Display the images in a 2x2 subplot
+ subplot(2, 2, 1);imshow(img3);
+ title('Original Image');
+ subplot(2, 2, 2);imshow(binaryImgA);
+ title('Auto Threshold ');
+ 3
+subplot(2, 2, 3);imshow(binaryImg1);
+ title('Threshold =0.3 ');
+ subplot(2, 2, 4);imshow(binaryImg2);
+ title('Threshold =0.6'); 
+ 
+ CheckDarkness(im1g1);
+ Image is dark
+ CheckDarkness(im1g2);
+ Image is bright
+ CheckDarkness(im1g3);
+ Image is bright
+ CheckDarkness(myexpimage1);
+ Image is dark
+ CheckDarkness(myexpimage2);
+ Image is dark
+ CheckDarkness(myexpimage3);
+Image is dark
+ CheckDarkness(binary_image_auto);
+ Image is bright
+ CheckDarkness(binary_image_1);
+ Image is dark
+ CheckDarkness(binary_image_2);
+ Image is bright
+ function CheckDarkness(img)
+    % Scale the matrix so that the maximum pixel value is 1
+    scaledImage = double(img) / max(img(:));
+    % Calculate the mean pixel value of the scaled matrix
+    meanValue = mean(scaledImage(:));
+    % Print the message according to conditions
+    if meanValue > 0.5
+        disp('Image is dark');
+    elseif meanValue == 0.5
+        disp('Image is normal');
+    else
+        disp('Image is bright');
+    end
+ end
+ 
+ img1=imread('lena.tif');
+ img2=imread('cameraman.tif');
+ figure;
+ subplot(1,2,1),imshow(img1);
+ subplot(1,2,2),imshow(img2);
+ resultImage1 = SubtractTwoImages(img2, img1);
+ resultImage2 = SubtractTwoImages(img1, img2);
+ figure;
+ subplot(2, 1, 1);imshow(resultImage1);
+ title('Subtracting cameraman from Lena');
+ subplot(2, 1, 2);imshow(resultImage2);
+ title('Subtracting Lena from Cameraman');
+ 
+ greaterPixels = img2>img1;
+ img1(greaterPixels) = img2(greaterPixels);
+ figure;
+ imshow(img1);
+ title('Lena Image with Copied Pixels from Camerman');
+ 
+ reflectL=flipud(imread('lena.tif'));
+ figure;
+ subplot(2,2,1),imshow(imread('lena.tif'));
+ subplot(2,2,2),imshow(reflectL);
+ reflectC=fliplr(img2);
+ subplot(2,2,3),imshow(img2);
+ subplot(2,2,4),imshow(reflectC);
+ 
+ %function need to be the last
+ function resultImage = SubtractTwoImages(image1, image2)
+ % Ensure both images have the same size
+ % assert(all(size(image1) == size(image2)), 'Images must have the same size');
+ % Subtract one image from the other
+    resultImage = image1-image2;
+ end
+ % Clip negative values to 0
+    resultImage(resultImage < 0) = 0;
+	
+	
+imgo=imread('onion.png');
+ %extract the redchannel,blue channel and green channel on rgb image
+ R=imgo(:,:,1);
+ G=imgo(:,:,2);
+ B=imgo(:,:,3);
+ %using all-black channel ,generating color version of each color channel
+ allBlack = zeros(size(imgo,1,2),class(imgo));
+ justR = cat(3,R,allBlack,allBlack);
+ justG = cat(3,allBlack,G,allBlack);
+ justB = cat(3,allBlack,allBlack,B);
+ figure;
+ subplot(2,2,1),imshow(imgo);
+ subplot(2,2,2),imshow(justR);
+ subplot(2,2,3),imshow(justG);
+ subplot(2,2,4),imshow(justB);
+ 
+  %original image to gray scal image
+ grayimg=im2gray(imgo);
+ %Enhacing the image by default function imadjust and stretchslim
+ adjuimg=imadjust(grayimg,stretchlim(grayimg));
+ figure;
+ subplot(1,1,1),imshow(adjuimg);
+ 
+ %histogrameualization for enhanced image
+ histeqo=histeq(adjuimg);
+ %cumulative distribution function of the  gray image 
+cumimg=imhist(grayimg)./numel(grayimg);
+ cum=cumsum(cumimg);
+ X=linspace(0,1,256);
+ figure;
+ subplot(2,2,1),imshow(histeqo);
+ %displaying histogram
+ subplot(2,2,2),imhist(histeqo);
+ subplot(2,2,3),plot(X,cum);
+ subplot(2,2,4),imshow(grayimg);
+ 
+ %preserving color in hsv colour space  histogram equalized in 3rd channel V
+ % and display original and output img
+ imagehsv=rgb2hsv(imgo);
+ v=histeq(imagehsv(:,:,3));
+ imagehsv(:,:,3)=v;
+ outputimg=hsv2rgb(imagehsv);
+ figure;
+ subplot(2,1,1),imshow(imgo);
+ subplot(2,1,2),imshow(outputimg);
+ 
+ ------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+ imgCamera=imread('cameraman.jpg');
+imgRice=imread('rice.png');
+subplot(1,3,1),imshow(imgCamera);
+imwrite(imgCamera,'location','png');
+subplot(1,3,2),imshow(imgCamera);
+imageadd=imadd(imgCamera,imgRice);
+subplot(1,3,3),imshow(imageadd)
+ 
+img3=addtwoimages(imgCamera,imgRice);
+figure;
+subplot(1,1,1),imshow(img3)
+ 
+lesspixels=imgCamera>imgRice;
+imgCamera(lesspixels)=imgRice(lesspixels);
+figure;
+subplot(1,1,1),imshow(imgCamera);
+title(' cameraman image with copied pixels from rice');
+ 
+reflectRice=flipud(imgRice);
+reflectCamera=fliplr(imread('cameraman.jpg'));
+addedImg=imadd(reflectRice,reflectCamera);
+figure;
+subplot(1,3,1),imshow(reflectRice);
+subplot(1,3,2),imshow(reflectCamera);
+subplot(1,3,3),imshow(addedImg);
+ 
+imgicon=imread('Shape.png');
+se = strel("line", 15, 15);
+ dilate = imdilate(imgicon, se);
+ erode = imerode(imgicon, se);
+ open = imopen(imgicon, se);
+ close = imclose(imgicon, se);
+ border= imgicon - erode;
+ figure;
+ subplot(2,3,1),imshow(imgicon);
+ title('Original Image');
+ subplot(2, 3, 2),imshow(erode);
+ title("Eroded image");
+ subplot(2, 3, 3),imshow(dilate);
+ title("Dilated image"); 
+subplot(2, 3, 4),imshow(open);
+ title("Open image");
+ subplot(2, 3, 5),imshow(close);
+ title("Close image"); 
+subplot(2, 3, 6),imshow(border);
+ title("Border");
+ 
+function rimg=addtwoimages(im1,im2)
+rimg=im1+im2;
+end
+ 
