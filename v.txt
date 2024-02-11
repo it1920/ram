@@ -1,0 +1,577 @@
+Connection
+
+<?php
+    define('host','localhost');
+    define('username','root');
+    define('password','');
+    define('database','practice');
+
+    $connection = mysqli_connect(host,username,password,database);
+
+    // if($connection){
+    //     echo("Database Connected");
+    // }else{
+    //     die("Database not connected");
+    // }
+
+    if(!$connection){
+        die("Database Not Connected!".mysqli_connect_error());
+    }
+?>
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------
+
+LogIn
+
+<?php
+ @include "Connection.php";
+ session_start();
+
+ if(isset($_POST["submit"]))
+ {
+
+    $email = $_POST["email"];
+    $pword = $_POST["password"];
+    $user = 'user';
+ 
+    $query2 = "SELECT * FROM `user` WHERE email='$email' AND password='$pword'";;
+    $out = mysqli_query($connection,$query2);
+    
+    if(mysqli_num_rows($out)>0){
+        $row = mysqli_fetch_array($out);
+
+        if($row['role']=="admin"){
+            $_SESSION['admin_name']=$row['name'];
+            header('location:adminhome.php');
+
+
+        }else if($row['role']=="user"){
+            $_SESSION['user_name'] = $row['name'];
+            $_SESSION['user_id'] = $row['id'];
+            header('location:userhome.php');
+        }
+    }
+
+        else{
+            $error[] = "Incorrect Email or Password!";
+        }
+    
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SignIn</title>
+    </head>
+    <body>
+        <div>
+            <form action="" method="POST">
+
+                <?php
+                    if(isset($error)){
+                        foreach($error as $error){
+                            echo $error."<br>";
+                        }
+                    }
+                ?>
+
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email">
+
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password">
+
+                <input type="submit" name="submit" value="SUMBMIT">
+            </form>
+        </div>
+
+    </body>
+</html>
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+LogOut
+
+<?php
+session_start(); // Start the session
+
+// Unset all session variables
+$_SESSION = array();
+
+
+
+// Destroy the session
+session_destroy();
+
+// Redirect the user to the home page or any other desired page
+header('Location: Login.php');
+exit(); // Ensure that no other code is executed after the redirection
+?>
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+MyBooking
+
+<?php
+	require_once('Connection.php');
+	session_start();
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>www.mybooking.com</title>
+	<style type="text/css">
+		.tablephp{
+			background-color: #208C7F;
+			position: fixed;
+		    left: 0;
+		    bottom: 20px;
+		    width: 100%;
+		}
+		.settable{
+			text-align:center;
+			background-color: lightcyan;
+		}
+		.row1{
+			font-weight: bold;
+		}
+		.green{
+			background-color: green;
+			border-radius: 10px;
+		}
+		.orange{
+			background-color: orange;
+			border-radius: 10px;
+		}
+		body{
+            background-image: url('images/back.jpg');
+        }
+		.footer {
+		   position: fixed;
+		   left: 0;
+		   bottom: 0;
+		   width: 100%;
+		   background-color: #205090;
+		   color: #2D2A22;
+		   text-align: center;
+		}
+		ul {
+          list-style-type: none;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          background-color: #00476F;
+        }
+
+        li {
+          float: left;
+        }
+
+        li a {
+          display: block;
+          color: white;
+          text-align: center;
+          padding: 14px 16px;
+          text-decoration: none;
+        }
+
+        li a:hover:not(.active) {
+          background-color: #111;
+        }
+
+        .active {
+          background-color: #00476F;
+        }
+	</style>
+</head>
+<table></table>
+<body>
+	<div>
+	<ul>
+		<li><a class="active" href="userhome.php">User-Home</a></li>
+		<li><a class="active" href="mybooking.php">My booking</a></li>
+        <li style="float:right"><a class="active" href="logout.php">Log out</a></li>
+    </ul>
+</div>
+<div>
+	<img src="images/airlines.jpg" width="100%" height="290px">
+</div>
+	<center>
+	<div class="tablephp">
+	<?php
+		$sql2 = "SELECT `booking_id`, `booking_flight`, `booking_price`, `booking_status` FROM `booking_data`;";
+		$result=mysqli_query($connection,$sql2);
+		$arr = array();
+		while ($row = mysqli_fetch_array($result)) {
+			array_push($arr,$row);
+		}
+		if(sizeof($arr)>0){
+			echo "<h1>My Booking</h1>";
+			echo "<table border='2' height='50%' width='50%'  class='settable'>";
+				echo "<tr class='row1'>";
+				echo "<td>Booking ID</td>";
+				echo "<td>Flight</td>";
+				echo "<td>Price</td>";
+				echo "<td>Status</td>";
+				echo "</tr>";
+					foreach ($arr as $key => $booking) {
+						echo "<tr>";
+						echo "<td>".$booking['booking_id']."</td>";
+						echo "<td>".$booking['booking_flight']."</td>";
+						echo "<td>".$booking['booking_price']."</td>";
+						if($booking['booking_status'] == 0){
+							echo "<td class='orange'>Pending</td>";
+						}
+						else{
+							echo "<td class='green'>Accepted</td>";
+						}
+						echo "</tr>";
+					}
+			echo "</table>";
+		}
+		else{
+			echo "<h3>No booking Details</h3>";
+		}
+	?>
+	</div>
+	</center>
+	<footer class="footer">@ Airline Lanka</footer>
+</body>
+</html>
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+Registation
+
+<?php
+@include "Connection.php";
+session_start();
+
+if(isset($_POST["submit"])){
+    $name = $_POST["uname"];
+    $email = $_POST["email"];
+    $pword = $_POST["pword"];
+    $cpword = $_POST["cpword"];
+    $role = "user";
+
+    $query = "SELECT * FROM user WHERE name='$name' && email='$email' && password='$pword'";
+    $out = mysqli_query($connection,$query);
+    $row = mysqli_fetch_array($out);
+    if(mysqli_num_rows($out)>0){
+        $error[] = "User Already Exist";
+    }
+    else{
+        if(empty($_POST["uname"])|| empty($_POST["email"]))
+        {
+            $error[]="Empty Field!";
+        }
+        if(empty($_POST["pword"]) || empty( $_POST["cpword"]))
+        {
+            $error[]="Password is required!";
+        }
+        else if($_POST["pword"]!=$_POST["cpword"]){
+            $error[]="Password missmatch!";
+        }
+        if(empty($error)){
+            $query1 = "INSERT INTO user(name, email, password, role) 
+            VALUES ('$name','$email','$pword','$role')";
+            mysqli_query($connection,$query1);
+            header('location:Login.php');
+        }
+
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Register Page</title>
+    </head>
+    <body>
+        <header>
+            <nav>
+                <ul>
+                    <li><a href="Register.php">Register</a></li>
+                    <li><a href="Login.php">SignIn</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div>
+        <form action="" method="POST">
+            <?php
+                if(isset($error)){
+                    foreach ($error as $error){
+                        echo $error."<br>";
+                    } 
+                }
+            ?>
+
+            <label for="name">Name:</label>
+            <input type="text" name="uname" id="name" ><br></br>
+          
+            <label for="email">Email:</label>
+            <input type="text" name="email" id="mail" ><br></br>
+
+            <label for="password">Password:</label>
+            <input type="password" name="pword" id="passwrd" ><br></br>
+
+            <label for="cpassword">Confirm Password:</label>
+            <input type="password" name="cpword" id="cpasswrd" ><br></br>
+
+            <input type="submit" name=" submit" value="SUBMIT">
+        </form>
+        </div>
+
+    </body>
+
+</html>
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+AdninAllBooking
+
+<?php
+@include "Connection.php";
+session_start();
+
+if(isset($_POST["submit"])){
+    $name = $_POST["uname"];
+    $email = $_POST["email"];
+    $pword = $_POST["pword"];
+    $cpword = $_POST["cpword"];
+    $role = "user";
+
+    $query = "SELECT * FROM user WHERE name='$name' && email='$email' && password='$pword'";
+    $out = mysqli_query($connection,$query);
+    $row = mysqli_fetch_array($out);
+    if(mysqli_num_rows($out)>0){
+        $error[] = "User Already Exist";
+    }
+    else{
+        if(empty($_POST["uname"])|| empty($_POST["email"]))
+        {
+            $error[]="Empty Field!";
+        }
+        if(empty($_POST["pword"]) || empty( $_POST["cpword"]))
+        {
+            $error[]="Password is required!";
+        }
+        else if($_POST["pword"]!=$_POST["cpword"]){
+            $error[]="Password missmatch!";
+        }
+        if(empty($error)){
+            $query1 = "INSERT INTO user(name, email, password, role) 
+            VALUES ('$name','$email','$pword','$role')";
+            mysqli_query($connection,$query1);
+            header('location:Login.php');
+        }
+
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Register Page</title>
+    </head>
+    <body>
+        <header>
+            <nav>
+                <ul>
+                    <li><a href="Register.php">Register</a></li>
+                    <li><a href="Login.php">SignIn</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div>
+        <form action="" method="POST">
+            <?php
+                if(isset($error)){
+                    foreach ($error as $error){
+                        echo $error."<br>";
+                    } 
+                }
+            ?>
+
+            <label for="name">Name:</label>
+            <input type="text" name="uname" id="name" ><br></br>
+          
+            <label for="email">Email:</label>
+            <input type="text" name="email" id="mail" ><br></br>
+
+            <label for="password">Password:</label>
+            <input type="password" name="pword" id="passwrd" ><br></br>
+
+            <label for="cpassword">Confirm Password:</label>
+            <input type="password" name="cpword" id="cpasswrd" ><br></br>
+
+            <input type="submit" name=" submit" value="SUBMIT">
+        </form>
+        </div>
+
+    </body>
+
+</html>
+
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+AdminHome
+
+<?php
+ require_once('Connection.php');
+ session_start();
+?>
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>www.Admin-Home.com</title>
+	<style type="text/css">
+		.accpet{
+			background-color: orange;
+			width: 100%;
+			border-radius: 5px;
+		}
+		.phptable{
+			background-color: #208C7F;
+			position: fixed;
+		    left: 0;
+		    bottom: 20px;
+		    width: 100%;
+		}
+		.rowheading{
+			font-weight: bold;
+		}
+		.maintable{
+			width: 50%;
+			height: 50%;
+			text-align: center;
+			background-color: lightcyan;
+		}
+		.footer {
+		   position: fixed;
+		   left: 0;
+		   bottom: 0;
+		   width: 100%;
+		   background-color: #205090;
+		   color: #2D2A22;
+		   text-align: center;
+		}
+		body{
+            background-image: url('images/back.jpg');
+        }
+		.footer {
+		   position: fixed;
+		   left: 0;
+		   bottom: 0;
+		   width: 100%;
+		   background-color: #205090;
+		   color: #2D2A22;
+		   text-align: center;
+		}
+		ul {
+          list-style-type: none;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          background-color: #00476F;
+        }
+
+        li {
+          float: left;
+        }
+
+        li a {
+          display: block;
+          color: white;
+          text-align: center;
+          padding: 14px 16px;
+          text-decoration: none;
+        }
+
+        li a:hover:not(.active) {
+          background-color: #111;
+        }
+
+        .active {
+          background-color: #00476F;
+        }
+	</style>
+</head>
+<body>
+	<div>
+		<ul>
+			<li><a class="active" href="adminhome.php">Admin-Home</a></li>
+			<li><a class="active" href="adminallbooking.php">All booking</a></li>
+	        <li style="float:right"><a class="active" href="logout.php">Log out</a></li>
+	    </ul>
+	</div>
+	<div>
+		<img src="images/airlines.jpg" width="100%" height="290px">
+	</div>
+	<center>
+	<div class="phptable">
+	<?php
+		$sql1 = "SELECT `booking_id`, `booking_flight`, `booking_price`, `booking_status` FROM `booking_data` WHERE `booking_status` = 0;";
+		$result = mysqli_query($connection,$sql1);
+		$arr = array();
+		while ($row = mysqli_fetch_array($result)) {
+			array_push($arr,$row);
+		}
+		if(sizeof($arr)>0){
+			echo "<h3>Pending Request</h3>";
+			echo "<table border='2' class='maintable'>";
+				echo "<tr class='rowheading'>";
+					echo "<td>Booking ID</td>";
+					echo "<td>Flight</td>";
+					echo "<td>Price</td>";
+					echo "<td>Status</td>";
+				echo "</tr>";
+					foreach ($arr as $key => $booking) {
+						$booking_id = $booking['booking_id'];
+						echo "<tr>";
+							echo "<td>".$booking['booking_id']."</td>";
+							echo "<td>".$booking['booking_flight']."</td>";
+							echo "<td>".$booking['booking_price']."</td>";
+							echo "<td>";
+								echo "<form action='".htmlspecialchars($_SERVER['PHP_SELF'])."' method='POST'>";
+								echo "<input type='hidden' name='change_id' value='".$booking_id."'>";
+								echo "<input type='submit' name='submit' value='Accpet' class='accpet'>";
+								echo "</form>";
+							echo "</td>";
+						echo "</tr>";
+					}
+			echo "</table>";
+			if(isset($_POST['submit'])){
+				if(isset($_POST['change_id'])){
+					$booking_id = $_POST['change_id'];
+					$sql2 = "UPDATE `booking_data` SET `booking_status`= 1 WHERE `booking_id` = '$booking_id';";
+					mysqli_query($connection,$sql2);
+				}
+			}
+		}
+		else{
+			echo "<h3>No Pending Request</h3>";
+			echo "<p>All the booking are approved OR No one book yet :(</p>";
+		}
+	?>
+	<div>
+	</center>
+	<footer class="footer">@ Airline Lanka</footer>
+</body>
+</html>
+
+----------------------------------------------------------------------------------------------------------------------------------------------
