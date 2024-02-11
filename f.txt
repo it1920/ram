@@ -1,0 +1,481 @@
+-----------------------------------------------------filedetails.php-------------------------------------------------------------------
+
+<?php
+    include("config.php");
+
+    if (isset($_GET['id'])) {
+        $file_id = $_GET['id'];
+        $sql = "SELECT * FROM files WHERE id = $file_id";
+        $result = mysqli_query($conn, $sql);
+        $file = mysqli_fetch_assoc($result);
+    }
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .file-details {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        p {
+            margin: 0;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        strong {
+            color: #3498db;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #217dbb;
+        }
+
+        .delete-link {
+            color: #e74c3c; /* Red color for delete link */
+        }
+
+        .delete-link:hover {
+            text-decoration: underline;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .back-link a {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .back-link a:hover {
+            background-color: #217dbb;
+        }
+    </style>
+</head>
+<body>
+    <h2>File Details</h2>
+    <?php
+    if ($file) {
+        echo "<p>File Name: {$file['file_name']}</p>";
+        echo "<p>File Path: {$file['file_path']}</p>";
+        echo "<p>Upload Date: {$file['upload_date']}</p>";
+        echo "<p><a href='deletefile.php?id={$file['id']}'>Delete File</a></p>";
+    } 
+    else {
+        echo "File not found.";
+    }
+    ?>
+    <p><a href="viewfiles.php">Back to File List</a></p>
+</body>
+</html>
+
+-----------------------------------------------------------------index.php-------------------------------------------------------------
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px; /* Added margin to separate from the link */
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .view-files {
+            text-align: center;
+        }
+
+        .view-files a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .view-files a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>File Upload Form</h2>
+        <form action="upload.php" method="post" enctype="multipart/form-data">
+            <label for="file">Choose File:</label>
+            <input type="file" name="file" id="file" required>
+            <button type="submit" name="submit">Upload</button>
+        </form>
+        <div class="view-files">
+            <a href="viewfiles.php">View Files</a>
+        </div>
+    </div>
+</body>
+</html>
+
+-------------------------------------------------------------upload.php----------------------------------------------------------------
+
+<?php
+    include("config.php");
+
+    if (isset($_POST["submit"])) {
+        $file_name = $_FILES["file"]["name"];
+        $file_tmp = $_FILES["file"]["tmp_name"];
+        $file_path = "uploads/" . $file_name;
+
+        move_uploaded_file($file_tmp, $file_path);
+
+        $sql = "INSERT INTO files (file_name, file_path) VALUES ('$file_name', '$file_path')";
+        if (mysqli_query($conn, $sql)) {
+            //echo "File uploaded successfully.";
+            header("Location:viewfiles.php");
+        } 
+        else {
+            echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+        }
+    }
+    mysqli_close($conn);
+?>
+
+-----------------------------------------------------------viewfiles.php------------------------------------------------------------------
+
+<?php
+    include("config.php");
+
+    $sql = "SELECT * FROM files";
+    $result = mysqli_query($conn, $sql);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Upload System</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f7f7f7;
+        margin: 0;
+        padding: 20px; /* Add padding to the body */
+    }
+
+    h2 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    li {
+        background-color: #fff;
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+        transition: box-shadow 0.3s;
+    }
+
+    li:hover {
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    a {
+        text-decoration: none;
+        color: #3498db;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+    
+    .upload-files {
+        text-align: center;
+    }
+
+    .upload-files a {
+        color: #3498db;
+        text-decoration: none;
+    }
+
+    .upload-files a:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+    <h2>File List</h2>
+    <ul>
+        <?php
+        while ($row = mysqli_fetch_assoc($result)) {
+            echo "<li><a href='filedetails.php?id={$row['id']}'>{$row['file_name']}</a></li>";
+        }
+        ?>
+    </ul>
+    <div class="upload-files">
+        <a href="index.php">Upload New Files</a>
+    </div>
+</body>
+</html>
+
+-------------------------------------------------------config.php----------------------------------------------------------------------
+
+<?php 
+    $db_host = "localhost";
+    $db_user = "root";
+    $db_pass = "";
+    $db_name = "file_upload_system";
+
+    $conn = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
+
+    if (!$conn) {
+        die("Connection failed: " . mysqli_connect_error());
+    }
+    //echo "Connect successful.!<br>";
+?>
+
+--------------------------------------------------------createtable.php-------------------------------------------------------------------
+
+<?php
+    include 'config.php';
+
+    $sql = "CREATE TABLE files (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        file_name VARCHAR(255) NOT NULL,
+        file_path VARCHAR(255) NOT NULL,
+        upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )";
+
+    $res = mysqli_query($conn, $sql);
+
+    if ($res) {
+        echo "Table Created Successfully.!";
+    }
+?>
+
+---------------------------------------------------------deletefile.php-------------------------------------------------------------
+
+<?php
+    include("config.php");
+
+    $file = null; // Initialize $file
+
+    if (isset($_GET['id'])) {
+        $file_id = $_GET['id'];
+        $sql = "SELECT * FROM files WHERE id = $file_id";
+        $result = mysqli_query($conn, $sql);
+        $file = mysqli_fetch_assoc($result);
+    }
+
+    // Check if the delete form is submitted
+    if (isset($_POST['delete'])) {
+        $delete_id = $_POST['delete_id'];
+        $delete_sql = "DELETE FROM files WHERE id = $delete_id";
+        if (mysqli_query($conn, $delete_sql)) {
+            // File is deleted successfully
+            header("Location:viewfiles.php");
+        } 
+        else {
+            // Error deleting file
+            echo "Error deleting file: " . mysqli_error($conn);
+        }
+    } 
+    else {
+        // Display confirmation message
+?>
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>File Upload System</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background-color: #f5f5f5;
+                    margin: 0;
+                    padding: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                h2 {
+                    text-align: center;
+                    color: #333;
+                    margin-bottom: 20px;
+                }
+
+                .confirmation-message {
+                    background-color: #fff;
+                    padding: 30px;
+                    border-radius: 8px;
+                    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+                    width: 100%;
+                    max-width: 600px;
+                    box-sizing: border-box;
+                    text-align: center;
+                }
+
+                p {
+                    margin: 0;
+                    margin-bottom: 20px;
+                    line-height: 1.5;
+                }
+
+                .button-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
+                button {
+                    padding: 10px 20px;
+                    margin-right: 10px;
+                    background-color: #e74c3c;
+                    color: #fff;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.3s;
+                }
+
+                button:hover {
+                    background-color: #c0392b;
+                }
+
+                a {
+                    text-decoration: none;
+                    color: #3498db;
+                    transition: color 0.3s;
+                }
+
+                a:hover {
+                    color: #217dbb;
+                }
+            </style>
+        </head>
+        <body>
+            <h2>Delete File Confirmation</h2>
+            <?php
+                if ($file) {
+                    echo "<p>Are you sure you want to delete the file '{$file['file_name']}'?</p>";
+                    echo "<form action='deletefile.php' method='post'>";
+                    echo "<input type='hidden' name='delete_id' value='{$file['id']}'>";
+                    echo "<button type='submit' name='delete'>Yes, Delete</button>";
+                    echo "</form>";
+                    echo "<p><a href='filedetails.php?id={$file['id']}'>Cancel</a></p>";
+                } 
+                else {
+                    echo "File not found.";
+                }
+            ?>
+        </body>
+        </html>
+<?php
+    }
+?>
+
+
