@@ -1,0 +1,483 @@
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+% arrangement 1
+adjacent(1,2).
+adjacent(1,3).
+adjacent(1,4).
+adjacent(1,5).
+adjacent(2,3).
+adjacent(2,4).
+adjacent(3,4).
+adjacent(4,5).
+
+% arrangement 2
+adjacent(2,1).
+adjacent(3,1).
+adjacent(4,1).
+adjacent(5,1).
+adjacent(3,2).
+adjacent(4,2).
+adjacent(4,3).
+adjacent(5,4).
+
+% color scheme a
+color(1,blue,a).
+color(2,orange,a).
+color(3,purple,a).
+color(4,red,a).
+color(5,orange,a).
+
+% color scheme b
+color(1,blue,b).
+color(2,orange,b).
+color(3,purple,b).
+color(4,orange,b).
+color(5,purple,b).
+
+conflict(R1, R2, ColorScheme):-
+	adjacent(R1,R2),
+	color(R1,Color,ColorScheme),
+	color(R2,Color,ColorScheme),
+	write(R1),write(" and "),write(R2),write(" in color scheme: "),write(ColorScheme),write(" color: "),write(Color),nl,write("Conflict").
+
+conflict(ColorScheme):-
+	adjacent(R1,R2),
+	color(R1,Color,ColorScheme),
+	color(R2,Color,ColorScheme),
+	write(R1),write(" and "),write(R2),write(" in color scheme: "),write(ColorScheme),write(" color: "),write(Color),nl,write("Conflict").
+	
+------------------------------------------------------------------------------------------------------------------------------------------------
+conflict(1, 2, a).
+conflict(1, 2, _).
+conflict(1, 2, a), conflict(1, 2, b).
+conflict(_).
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+% 01) Check whether a given element is a member of the list.
+member(X, [X|_]).
+member(X, [_|T]) :- member(X, T).
+
+% Query example:
+% ?- member(3, [1,2,3,4,5]).
+% true.
+
+% 02) Print the third element of the list.
+print_third([_,_,X|_]) :- write(X).
+
+% Query example:
+% ?- print_third([1,2,3,4,5]).
+% 3
+
+% 03) Check whether the first 2 elements are same or not.
+same_first_two([X,X|_]).
+
+% Query example:
+% ?- same_first_two([1,1,2,3,4]).
+% true.
+
+% 04) Swap the first 2 elements of the list.
+swap_first_two([X,Y|T], [Y,X|T]).
+
+% Query example:
+% ?- swap_first_two([1,2,3,4,5], Result).
+% Result = [2, 1, 3, 4, 5].
+
+% 05) Calculate the length of the list.
+list_length([], 0).
+list_length([_|T], Len) :- list_length(T, Len1), Len is Len1 + 1.
+
+% Query example:
+% ?- list_length([1,2,3,4,5], Len).
+% Len = 5.
+
+% 06) Find the summation of the list elements.
+list_sum([], 0).
+list_sum([H|T], Sum) :- list_sum(T, Rest), Sum is H + Rest.
+
+% Query example:
+% ?- list_sum([1,2,3,4,5], Sum).
+% Sum = 15.
+
+% 07) Print the last list element.
+print_last([X]) :- write(X).
+print_last([_|T]) :- print_last(T).
+
+% Query example:
+% ?- print_last([1,2,3,4,5]).
+% 5
+
+% 08) Concatenate two lists.
+concat_lists([], L, L).
+concat_lists([H|T], L2, [H|Result]) :- concat_lists(T, L2, Result).
+
+% Query example:
+% ?- concat_lists([1,2,3], [4,5,6], Result).
+% Result = [1, 2, 3, 4, 5, 6].
+
+% 09) Find the maximum of the list element.
+list_max([X], X).
+list_max([H|T], Max) :- list_max(T, MaxT), (H > MaxT -> Max = H ; Max = MaxT).
+
+% Query example:
+% ?- list_max([1,5,3,2,4], Max).
+% Max = 5.
+
+% 10) Find the minimum of the list element.
+list_min([X], X).
+list_min([H|T], Min) :- list_min(T, MinT), (H < MinT -> Min = H ; Min = MinT).
+
+% Query example:
+% ?- list_min([1,5,3,2,4], Min).
+% Min = 1.
+
+% 11) Delete an element from a list.
+delete_element(_, [], []).
+delete_element(X, [X|T], T).
+delete_element(X, [H|T], [H|Result]) :- delete_element(X, T, Result).
+
+% Query example:
+% ?- delete_element(3, [1,2,3,4,5], Result).
+% Result = [1, 2, 4, 5].
+
+% 12) Appending two lists.
+append_lists([], L, L).
+append_lists([H|T1], L2, [H|Result]) :- append_lists(T1, L2, Result).
+
+% Query example:
+% ?- append_lists([1,2,3], [4,5,6], Result).
+% Result = [1, 2, 3, 4, 5, 6].
+
+% 13) Divide a list into two lists.
+split_list(List, 0, [], List).
+split_list([H|T], N, [H|Part1], Part2) :- N > 0, N1 is N - 1, split_list(T, N1, Part1, Part2).
+
+% Query example:
+% ?- split_list([1,2,3,4,5], 3, Part1, Part2).
+% Part1 = [1, 2, 3],
+% Part2 = [4, 5].
+
+% 14) Permutation of a list.
+permute([], []).
+permute(List, [X|Perm]) :- delete_element(X, List, Rest), permute(Rest, Perm).
+
+% Query example:
+% ?- permute([1,2,3], Perm).
+% Perm = [1, 2, 3] ;
+% Perm = [1, 3, 2] ;
+% Perm = [2, 1, 3] ;
+% Perm = [2, 3, 1] ;
+% Perm = [3, 1, 2] ;
+% Perm = [3, 2, 1].
+
+% 15) Reverse a list.
+reverse_list([], []).
+reverse_list([H|T], Reversed) :- reverse_list(T, RevT), append_lists(RevT, [H], Reversed).
+
+% Query example:
+% ?- reverse_list([1,2,3,4,5], Reversed).
+% Reversed = [5, 4, 3, 2, 1].
+
+% 16) Check if a list is ordered.
+ordered([]).
+ordered([_]).
+ordered([X,Y|T]) :- X =< Y, ordered([Y|T]).
+
+% Query example:
+% ?- ordered([1,2,3,4,5]).
+% true.
+
+% 17) Union of two lists.
+union([], L, L).
+union([H|T], L2, Result) :- member(H, L2), !, union(T, L2, Result).
+union([H|T], L2, [H|Result]) :- union(T, L2, Result).
+
+% Query example:
+% ?- union([1,2,3], [3,4,5], Union).
+% Union = [1, 2, 3, 4, 5].
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+% 1) Is Bob a parent of Tom?
+is_parent_of_bob(X) :- parent(bob, X).
+
+% Query example:
+% ?- is_parent_of_bob(tom).
+% false.
+
+% 2) Is Tom a parent of Bob?
+is_parent_of_tom(X) :- parent(tom, X).
+
+% Query example:
+% ?- is_parent_of_tom(bob).
+% true.
+
+% 3) Who is Pat's parent?
+pat_parent(X) :- parent(X, pat).
+
+% Query example:
+% ?- pat_parent(X).
+% X = bob ;
+% X = pam.
+
+% 4) Is Liz a parent of Pat?
+liz_parent(pat).
+
+% Query example:
+% ?- liz_parent(pat).
+% true.
+
+% 5) Is Tom a parent of Ben?
+tom_parent(ben).
+
+% Query example:
+% ?- tom_parent(ben).
+% false.
+
+% 6) Who are Bob's parents?
+bob_parents(X, Y) :- parent(X, bob), parent(Y, bob), X \= Y.
+
+% Query example:
+% ?- bob_parents(X, Y).
+% X = tom, Y = pam ;
+% X = pam, Y = tom.
+
+% 7) Who is a parent of whom?
+all_parents(Parent, Child) :- parent(Parent, Child).
+
+% Query example:
+% ?- all_parents(Parent, Child).
+% Parent = tom, Child = bob ;
+% Parent = pam, Child = bob ;
+% Parent = tom, Child = liz ;
+% Parent = bob, Child = ann ;
+% Parent = bob, Child = pat ;
+% Parent = pat, Child = jim.
+
+% 8) Who is a grandparent of Jim?
+grandparent(X, jim) :- parent(X, Y), parent(Y, jim).
+
+% Query example:
+% ?- grandparent(X, jim).
+% X = tom ;
+% X = pam ;
+% false.
+
+% 9) Who are Tom's grandchildren?
+tom_grandchildren(X) :- parent(tom, Child), parent(Child, X).
+
+% Query example:
+% ?- tom_grandchildren(X).
+% X = ann ;
+% X = pat ;
+% false.
+
+% 10) Do Ann and Pat have a common parent?
+common_parent(Child1, Child2) :- parent(Parent, Child1), parent(Parent, Child2), Child1 \= Child2.
+
+% Query example:
+% ?- common_parent(ann, pat).
+% true ;
+% false.
+
+% 11) Do Ann and Tom have a common parent?
+common_parent(Child1, Child2) :- parent(Parent, Child1), parent(Parent, Child2), Child1 \= Child2.
+
+% Query example:
+% ?- common_parent(ann, tom).
+% false.
+
+% 12) Who is Pat's parent?
+pat_parent(X) :- parent(X, pat).
+
+% Query example:
+% ?- pat_parent(X).
+% X = bob ;
+% X = pam.
+
+% 13) Does Liz have a child?
+liz_has_child :- parent(liz, _).
+
+% Query example:
+% ?- liz_has_child.
+% true.
+
+% 14) Who is Pat's grandparent?
+pat_grandparent(X) :- parent(X, Y), parent(Y, pat).
+
+% Query example:
+% ?- pat_grandparent(X).
+% X = tom ;
+% X = pam ;
+% false.
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+unsafe(state_w(M, C, _)):- M>0, C>M,!.  %on the west
+unsafe(state_w(M, C, _)):- M<3, M>C.    %on the east 3-C > 3-M >0
+
+move(state_w(M, C, 1), state_w(M1, C, 0),'A Missionary goes alone from west to east'):-
+	M>0,  M1 is M-1.
+
+% M>0 means M>=1, unless there is one missionary, this action is not possible
+
+move(state_w(M, C, 1), state_w(M2, C, 0),'Two Missionaries go  from west to east'):-
+	M>1, M2 is M-2.
+
+move(state_w(M, C, 1), state_w(M1, C1, 0),'A cannibal and a Missionary go  from west to east'):-
+	C>0, M>0, M1 is M-1, C1 is C-1.
+
+move(state_w(M, C, 1), state_w(M, C1, 0),'A cannibal goes  from west to east'):-
+	C>0, C1 is C-1.
+
+move(state_w(M, C, 1), state_w(M, C2, 0),'Two Cannibals go  from west to east'):-
+	C>1, C2 is C-2.
+
+
+% Moves from East to West
+
+move(state_w(M, C, 0), state_w(M1, C, 1),'A Missionary goes alone from east to west'):-
+	M<3, M1 is M+1.  %3-M>0
+
+move(state_w(M, C, 0), state_w(M2, C, 1),'Two Missionaries go  from east to west'):-
+	M<2, M2 is M+2.  %3-M>1
+
+move(state_w(M, C, 0), state_w(M1, C1, 1),'A cannibal and a Missionary go  from east to west'):-
+	C<3, M<3, M1 is M+1, C1 is C+1.   %3-M>0, 3-C >0
+
+
+move(state_w(M, C, 0), state_w(M, C1, 1),'A cannibal goes  from east to west'):-
+	C<3, C1 is C+1.  %3-C > 0
+
+move(state_w(M, C, 0), state_w(M, C2, 1),'Two Cannibals go  from east to west'):-
+	C<2, C2 is C+2.  %3-C >1.
+
+
+find_actions_path(GS,[GS|Path],Actions,Actions,[GS|Path]).
+
+find_actions_path(GS,[CS|PathSf],ActionsSf,ActionPlan,FinalPath):-
+	CS\=GS,
+	move(CS, NS, Action),
+	not(unsafe(NS)),
+	not(member(NS, PathSf)),
+	find_actions_path(GS,[NS, CS|PathSf],[Action|ActionsSf],ActionPlan, FinalPath).
+
+get_actions_path(CS, GS, ActPlan, Path):-
+find_actions_path(GS, [CS], [], ActPlan, Path).
+
+
+solve:-	get_actions_path(state_w(3,3,1), state_w(0,0,0),AP, P),
+        reverse(P, P1),
+        reverse(AP, AP1),
+		write(P1), nl,
+        write('Actions '), nl, write('======='), nl,
+	    print_list(AP1).
+
+print_list([H|T]):-write(H), nl,print_list(T).
+print_list([]).
+
+
+print_list_in_reverse([H|T]):-print_list_in_reverse(T),write(H), nl.
+print_list_in_reverse([]).
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+* You are given with two jugs, a 4-liter one and a 3-liter one
+a pump which has unlimited water which you can use to fill the jug.
+and the ground on which water may be poured. Neither jug has any
+measuring mark on it*/
+
+init_state(state(0,0)).
+goal_state(state(2,0)).
+
+write_action(action1):-write('Fill the large jug(4l)'),nl.
+write_action(action2):-write('Fill the small jug (3l)'),nl.
+write_action(action3):-write('Empty the small jug (3l)'),nl.
+write_action(action4):-write('Empty the large jug (4l)'),nl.
+write_action(action5):-write('Fill the large jug (4l) transfer from small jug (3l)'),nl.
+write_action(action6):-write('Fill the small jug (3l) transfer from large jug (4l)'),nl.
+write_action(action7):-write('Empty the large jug (4l) by filling small jug (3l)'),nl.
+write_action(action8):-write('Empty the small jug (3l) by filling large jug (4l)'),nl.
+
+fill(state(L,S),action1,state(4,S)):-L<4.
+fill(state(L,S),action2,state(L,3)):-S<3.
+fill(state(L,S),action3,state(L,0)):-S>0.
+fill(state(L,S),action4,state(0,S)):-L>0.
+fill(state(L,S),action5,state(4,T)):-L<4,T is L+S-4,S>0.
+fill(state(L,S),action6,state(T,3)):-S<3,T is L+S-3,L>0.
+fill(state(L,S),action7,state(0,T)):-L>0,T is S+L,S<3.
+-fill(state(L,S),action8,state(T,0)):-S>0,T is L+S, L<4.
+
+write_action_list([]).
+write_action_list([H|T]):- write_action(H),write_action_list(T),!.
+
+member(X,[X|_]):-!.
+member(X,[_|L]):-member(X,L).
+
+can_fill(S,S,P,P):-!.
+can_fill(S1,S2,M,[A|T]):-fill(S1,A,S3),not(member(S3,M)),can_fill(S3,S2,[S3|M],T),!.
+
+go:-init_state(S),goal_state(G),can_fill(S,G,[S],L),write_action_list(L),!.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+%predicate state consist of the position of farmer,goat,wolf,grass.
+
+initial_state(state(east,east,east,east)).
+goal_state(state(west,west,west,west)).
+
+unsafe(state(B,A,A,_)):-notequal(A,B).
+unsafe(state(B,A,_,A)):-notequal(A,B).
+
+notequal(east,west).
+notequal(west,east).
+
+write_action(move1(P1,P2)):-write('Farmer goes with goat from'),write(P1),write('to'),write(P2),n1.
+write_action(move2(P1,P2)):-write('Farmer goes alone from'),write(P1),write('to'),write(P2),n1.
+write_action(move3(P1,P2)):-write('Farmer goes with wolf from'),write(P1),write('to'),write(P2),n1.
+write_action(move4(P1,P2)):-write('Farmer goes with grass from'),write(P1),write('to'),write(P2),n1.
+
+travel(state(P1,P1,A,B),move1(P1,P2),state(P2,P2,A,B)):-notequal(P1,P2),not(unsafe(state(P2,P2,A,B))).
+travel(state(P1,A,B,C),move2(P1,P2),state(P2,A,B,C)):-notequal(P1,P2),not(unsafe(state(P2,A,B,C))).
+travel(state(P1,A,P1,B),move3(P1,P2),state(P2,A,P2,B)):-notequal(P1,P2),not(unsafe(state(P2,A,P2,B))).
+travel(state(P1,A,B,P1),move4(P1,P2),state(P2,A,B,P2)):-notequal(P1,P2),not(unsafe(state(P2,A,B,P2))).
+
+write_action_list([]).
+write_action_list([H|T]):-write_action(H),write_action_list(T),!.
+
+can(S,S,_,[]).
+can(S1,S2,V,[A|L]):-travel(S1,A,T),not(member(T,V)),can(T,S2,[T|V],L).
+
+go:-initial_state(S),goal_state(G),can(S,G,[S],L),write_action_list(L),!.
+
+--------------------------------------------------------------------------------------------------------------------------------
+
+% Initial state: monkey is at door, monkey has not grabbed banana
+at(door, monkey).
+at(window, banana).
+not_grabbed(monkey).
+
+% Define actions
+move(monkey, grasp, banana) :- at(door, monkey), at(door, banana), not_grabbed(monkey).
+move(monkey, climb, window) :- at(door, monkey), not_grabbed(monkey).
+move(monkey, walk, door) :- not_grabbed(monkey).
+
+% Define state changes
+result(A, S, S1) :- move(A, _, _), apply(A, S, S1).
+
+apply(grasp, S, S1) :- not_grabbed(monkey), at(door, monkey), at(door, banana), S1 = [grabbed(monkey)].
+apply(climb, S, S1) :- at(door, monkey), S1 = [at(window, monkey) | S].
+apply(walk, S, S1) :- S1 = [at(door, monkey) | S].
+
+% Define goal state
+goal([grabbed(monkey)]).
+
+% Define solving predicate
+solve(State, Actions) :- goal(State), Actions = [].
+solve(State, [Action | RestActions]) :- move(_, Action, _), result(Action, State, NewState), solve(NewState, RestActions).
+
+---------------------------------------------------------------------------------------------------------------------------------
