@@ -1,10 +1,159 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <iostream>
 
-int main() {
+// A method to convert char into ASCII
+int toASCII(char x)
+{
+	int ascii = int(x);
+	return ascii;
+}
+
+// A method to convert int to 8-bit binary
+void toBinary(int n, char* binary)
+{
+	binary[8] = '\0';
+	for (int i = 7; i >= 0; i--)
+	{
+		if ((n >> i) & 1)
+		{
+			binary[7 - i] = '1';
+		}
+		else
+		{
+			binary[7 - i] = '0';
+		}
+	}
+}
+
+int main()
+{
+	int np;
+	int pid;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+
+	// Initialize the array for receiving message for all processes
+	char recv_msg[8] = { ' ' };
+	char recv_bin_msg[8][9];
+
+	if (np != 8)
+	{
+		if (pid == 0)
+		{
+			printf("Please rerun this program with 8 processes.\n");
+		}
+		MPI_Finalize();
+		return 0;
+	}
+
+	if (pid == 0)
+	{
+		char character_set[8][8] =
+		{
+			{'a', 'c', 'a', 'd', 'e', 'm', 'i', 'c'},
+			{'o', 'r', 'g', 'a', 'n', 'i', 'z', 'e'},
+			{'h', 'u', 'm', 'a', 'n', 'i', 't', 'y'},
+			{'v', 'o', 'l', 'a', 't', 'i', 'l', 'e'},
+			{'p', 'e', 'a', 'c', 'e', 'f', 'u', 'l'},
+			{'c', 'a', 'l', 'e', 'n', 'd', 'a', 'r'},
+			{'k', 'e', 'y', 'b', 'o', 'a', 'r', 'd'},
+			{'r', 'e', 's', 'e', 'a', 'r', 'c', 'h'}
+		};
+
+		// Keep first row at process 0
+		for (int i = 0; i < 8; i++)
+		{
+			recv_msg[i] = character_set[0][i];
+		}
+
+		// Distribute rest of the characters between each other processes
+		for (int i = 1; i < 8; i++)
+		{
+			MPI_Send(&character_set[i], 8, MPI_CHAR, i, 808, MPI_COMM_WORLD);
+		}
+	}
+	else
+	{
+		MPI_Recv(&recv_msg, 8, MPI_CHAR, 0, 808, MPI_COMM_WORLD, &sta);
+	}
+
+	// Print for all 8 processes
+	printf("My process id is %d and I received: ", pid);
+	for (int i = 0; i < 8; i++)
+	{
+		printf("%c ", recv_msg[i]);
+	}
+	printf("\n");
+
+	// Convert to ASCII
+	int ascii_msg[8];
+	for (int i = 0; i < 8; i++)
+	{
+		ascii_msg[i] = toASCII(recv_msg[i]);
+	}
+
+	printf("ASCII format of the characater set is ");
+	for (int i = 0; i < 8; i++)
+	{
+		printf("%d ", ascii_msg[i]);
+	}
+	printf("\n\n");
+
+	// Convert to Binary
+	char bin_msg[8][9];
+
+	for (int i = 0; i < 8; i++)
+	{
+		toBinary(ascii_msg[i], bin_msg[i]);
+		bin_msg[i][8] = '\0';
+	}
+
+	if (pid != 0)
+	{
+		// Send to process 0 from other processes
+		MPI_Send(&bin_msg, 8 * 9, MPI_CHAR, 0, 808, MPI_COMM_WORLD);
+	}
+	else
+	{
+		// Receive from other processes at 0
+		for (int i = 1; i < 8; i++)
+		{
+			MPI_Recv(&recv_bin_msg, 8 * 9, MPI_CHAR, i, 808, MPI_COMM_WORLD, &sta);
+
+			// Print binary sequence for process 0
+			printf("Received from 0 and binary format is: ");
+			for (int i = 0; i < 8; i++)
+			{
+				printf("%s", bin_msg[i]);
+			}
+			printf("\n");
+
+			// Print binary sequence
+			printf("Received from %d and binary format is: ", i);
+			for (int i = 0; i < 8; i++)
+			{
+				recv_bin_msg[i][8] = '\0';
+				printf("%s", recv_bin_msg[i]);
+			}
+			printf("\n");
+
+		}
+	}
+
+	MPI_Finalize();
+	return 0;
+}
+
+----------------------------------------------------------------------------------------------------------------------------
+
+#include <mpi.h>
+#include <stdio.h>
+
+int main()
+{
 	int np;
 	int pid;
 
@@ -13,73 +162,109 @@ int main() {
 	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
 	MPI_Status sta;
 
-	if (np != 4) {
-		if (pid == 0) {
-			printf("Error:System Should have 4 processors!");
+	if (np != 4)
+	{
+		if (pid == 0)
+		{
+			printf("Please rerun the program with 4 processes.\n");
+			MPI_Finalize();
+			return 0;
 		}
-		MPI_Finalize();
-		return 1;
 	}
 
-	if (pid == 0) {
-		int receiveA[1][4];
-		int localC[1][4] = {};
-		int FinalResultC[4][4] = {};
+	int mat_arr_a[4][4];
+	int mat_arr_b[4][4];
+	int recv_mat_arr_a[4];
+	int result_mat[4][4];
 
-		int matrixA[4][4] = {
-			{2,1,7,5},
-			{1,1,8,7},
-			{0,1,3,1},
-			{3,9,3,2}
-		};
+	if (pid == 0)
+	{
+		mat_arr_a[0][0] = 2;
+		mat_arr_a[0][1] = 1;
+		mat_arr_a[0][2] = 7;
+		mat_arr_a[0][3] = 5;
+		mat_arr_a[1][0] = 1;
+		mat_arr_a[1][1] = 1;
+		mat_arr_a[1][2] = 8;
+		mat_arr_a[1][3] = 7;
+		mat_arr_a[2][0] = 0;
+		mat_arr_a[2][1] = 1;
+		mat_arr_a[2][2] = 3;
+		mat_arr_a[2][3] = 1;
+		mat_arr_a[3][0] = 3;
+		mat_arr_a[3][1] = 9;
+		mat_arr_a[3][2] = 3;
+		mat_arr_a[3][3] = 2;
 
-		int matrixB[4][4] = {
-			{3, 5, 9, 7},
-			{0, 2, 2, 5},
-			{1, 8, 9, 2},
-			{1, 2, 9, 7}
-		};
+		mat_arr_b[0][0] = 3;
+		mat_arr_b[0][1] = 5;
+		mat_arr_b[0][2] = 9;
+		mat_arr_b[0][3] = 7;
+		mat_arr_b[1][0] = 0;
+		mat_arr_b[1][1] = 2;
+		mat_arr_b[1][2] = 2;
+		mat_arr_b[1][3] = 5;
+		mat_arr_b[2][0] = 1;
+		mat_arr_b[2][1] = 8;
+		mat_arr_b[2][2] = 9;
+		mat_arr_b[2][3] = 2;
+		mat_arr_b[3][0] = 1;
+		mat_arr_b[3][1] = 2;
+		mat_arr_b[3][2] = 9;
+		mat_arr_b[3][3] = 7;
 
-		MPI_Scatter(&matrixA, 4, MPI_INT, &receiveA, 4, MPI_INT, 0, MPI_COMM_WORLD);
-		MPI_Bcast(&matrixB, 16, MPI_INT, 0, MPI_COMM_WORLD);
-
-		printf("My PID :%d and I'm Receiving", pid);
-
-
-		//Performing Matrix Multiplication
-		for (int i = 0; i < 1; i++) {
-			for (int j = 0; j < 4; j++) {
-				localC[i][j] = 0;
-				for (int k = 0; k < 4; k++) {
-					localC[i][j] += receiveA[i][k] * matrixB[k][j];
-				}
-
-			}
+		// Keep row 0 at process 0
+		for (int i = 0; i < 4; i++)
+		{
+			recv_mat_arr_a[i] = mat_arr_a[0][i];
 		}
 
-		//Printing Results
-		for (int i = 0; i < 4; i++) {
-			printf("%d ", localC[0][i]);
+		// Distribute rows to all other processes
+		for (int i = 1; i < 4; i++)
+		{
+			MPI_Send(&mat_arr_a[i], 4, MPI_INT, i, 808, MPI_COMM_WORLD);
 		}
 
-		//collecting results by pid=0
-		MPI_Gather(&localC, 4, MPI_INT, &FinalResultC, 4, MPI_INT, 0, MPI_COMM_WORLD);
+	}
+	else
+	{
+		MPI_Recv(&recv_mat_arr_a, 4, MPI_INT, 0, 808, MPI_COMM_WORLD, &sta);
+	}
 
-		//Final Answer
-		printf("\n");
-		if (pid == 0) {
-			printf("Resultant Matrix\n\n");
-			//printing final resultant matrix
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					printf("%d", FinalResultC[i][j]);
-				}
-				printf("\n");
+	// Broadcast matrix B
+	MPI_Bcast(&mat_arr_b, 16, MPI_INT, 0, MPI_COMM_WORLD);
+
+	// Calculate row sum for all processes
+	int row_total[4] = { 0 };
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			row_total[i] += recv_mat_arr_a[j] * mat_arr_b[j][i];
+		}
+	}
+	printf("PID %d's Local sum: ", pid);
+	for (int i = 0; i < 4; i++)
+	{
+		printf("%d ", row_total[i]);
+	}
+	printf("\n");
+
+	MPI_Gather(&row_total, 4, MPI_INT, &result_mat, 4, MPI_INT, 0, MPI_COMM_WORLD);
+	
+	if (pid == 0)
+	{
+		printf("Resultant matrix: \n");
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				printf("%d\t", result_mat[i][j]);
 			}
+			printf("\n");
 		}
 	}
 
 	MPI_Finalize();
 	return 0;
-
 }
