@@ -1,94 +1,94 @@
-def knapsack(weights, values, capacity):
-    n = len(weights)
-    dp = [[0 for _ in range(capacity + 1)] for _ in range(n + 1)]
 
-    for i in range(1, n + 1):
-        for w in range(1, capacity + 1):
-            if weights[i-1] <= w:
-                dp[i][w] = max(dp[i-1][w], dp[i-1][w-weights[i-1]] + values[i-1])
-            else:
-                dp[i][w] = dp[i-1][w]
+CREATE DATABASE CompanyDB;
+USE CompanyDB;
 
-    # Backtrack to find the selected items
-    w = capacity
-    selected_items = []
-    for i in range(n, 0, -1):
-        if dp[i][w] != dp[i-1][w]:
-            selected_items.append(i)
-            w -= weights[i-1]
+CREATE TABLE Location (
+    Location_ID INT PRIMARY KEY,
+    Regional_Group VARCHAR(255)
+);
 
-    return dp[n][capacity], selected_items
+CREATE TABLE Job (
+    Job_Id INT PRIMARY KEY,
+    JobRole VARCHAR(255)
+);
 
-# Package data
-weights = [12, 15, 30, 25, 40, 50, 35, 45, 20, 10]
-values = [600, 1000, 1200, 2000, 1500, 800, 900, 1100, 500, 1300]
-capacity = 150
+CREATE TABLE Department (
+    Department_Id INT PRIMARY KEY,
+    Name VARCHAR(255),
+    Location_Id INT,
+    FOREIGN KEY (Location_Id) REFERENCES Location(Location_ID)
+);
 
-# Call the function
-max_value, selected_items = knapsack(weights, values, capacity)
-print("Maximum Value:", max_value)
-print("Selected Packages:", selected_items)
+CREATE TABLE Employee (
+    Employee_Id INT PRIMARY KEY,
+    Last_Name VARCHAR(255),
+    First_Name VARCHAR(255),
+    Middle_Name CHAR(1),
+    Job_Id INT,
+    Manager_Id INT,
+    Hire_Date DATE,
+    Salary INT,
+    Comm VARCHAR(255),
+    Department_Id INT,
+    FOREIGN KEY (Job_Id) REFERENCES Job(Job_Id),
+    FOREIGN KEY (Department_Id) REFERENCES Department(Department_Id)
+);
+SHOW CREATE TABLE Location;
+SHOW CREATE TABLE Job;
+SHOW CREATE TABLE Department;
+SHOW CREATE TABLE Employee;
 
+SELECT * FROM Location;
+SELECT * FROM Job;
+SELECT * FROM Department;
+SELECT * FROM Employee;
 
-_______________________________
+SELECT LOWER(Regional_Group) FROM Location;
+SELECT First_Name, Last_Name, Salary * 12 AS Annual_Salary FROM Employee;
+SELECT CONCAT(Last_Name, ' ', Middle_Name, '. ', First_Name) AS Full_Name FROM Employee;
+SELECT * FROM Employee WHERE Last_Name NOT LIKE '%S%';
+SELECT * FROM Employee WHERE Department_Id IN (20, 30);
+SELECT * FROM Employee WHERE Department_Id IN (20, 30);
+SELECT * FROM Employee WHERE Comm IS NULL;
+SELECT Department_Id, MAX(Salary) AS Max_Salary, MIN(Salary) AS Min_Salary, AVG(Salary) AS Avg_Salary 
+FROM Employee 
+GROUP BY Department_Id;
+SELECT COUNT(*) FROM Employee WHERE YEAR(Hire_Date) = 1985;
+SELECT * FROM Employee WHERE Salary = (SELECT MAX(Salary) FROM Employee);
+SELECT d.Name, COUNT(e.Employee_Id) AS Total_Employees
+FROM Department d
+LEFT JOIN Employee e ON d.Department_Id = e.Department_Id
+GROUP BY d.Department_Id;
+SELECT d.Name 
+FROM Department d
+JOIN Employee e ON d.Department_Id = e.Department_Id
+GROUP BY d.Name
+HAVING COUNT(e.Employee_Id) >= 3
+ORDER BY d.Name ASC;
+SELECT l.Regional_Group, e.Salary
+FROM Employee e
+JOIN Department d ON e.Department_Id = d.Department_Id
+JOIN Location l ON d.Location_Id = l.Location_ID
+WHERE e.Salary = (SELECT MAX(Salary) FROM Employee);
+SELECT l.Regional_Group, e.Salary
+FROM Employee e
+JOIN Department d ON e.Department_Id = d.Department_Id
+JOIN Location l ON d.Location_Id = l.Location_ID
+WHERE e.Salary = (SELECT MAX(Salary) FROM Employee);
+SELECT j.JobRole, COUNT(e.Employee_Id) AS Num_Employees, AVG(e.Salary) AS Avg_Salary
+FROM Job j
+JOIN Employee e ON j.Job_Id = e.Job_Id
+WHERE j.JobRole LIKE '%LE%'
+GROUP BY j.JobRole
+HAVING COUNT(e.Employee_Id) > 1
+ORDER BY Avg_Salary DESC;
+CREATE TABLE `Job-Clone` LIKE Job;
+INSERT INTO `Job-Clone` SELECT * FROM Job;
+ALTER TABLE Employee CHANGE Comm Commission VARCHAR(255);
+UPDATE Employee e
+JOIN Department d ON e.Department_Id = d.Department_Id
+SET e.Salary = e.Salary * 1.1
+WHERE d.Name = 'Sales';
 
-import matplotlib.pyplot as plt
-
-# Sample locations for selected items (assuming the map is 2D)
-locations = {
-    1: (2, 3), 2: (5, 8), 3: (6, 2), 4: (7, 5), 5: (4, 7),
-    6: (3, 6), 7: (1, 8), 8: (9, 4), 9: (7, 1), 10: (8, 9)
-}
-
-# Plot the selected items on the map
-for item in selected_items:
-    plt.scatter(*locations[item], label=f'Package {item}')
-    plt.text(*locations[item], f'{item}', fontsize=12, ha='right')
-
-plt.title('Selected Package Locations')
-plt.xlabel('X Coordinate')
-plt.ylabel('Y Coordinate')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-_______________________________
-
-
-from math import sqrt
-
-warehouse_location = (0, 0)
-
-def distance(p1, p2):
-    return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
-
-# Sort selected items based on their distance from the warehouse
-selected_items.sort(key=lambda item: distance(warehouse_location, locations[item]))
-
-print("Order of Delivery:", selected_items)
-
-_______________________________
-
-def calculate_score(S):
-    vowels = set('aeiou')
-    alice_score = 0
-    bob_score = 0
-    
-    for i in range(len(S)):
-        if S[i] in vowels:
-            alice_score += len(S) - i
-        else:
-            bob_score += len(S) - i
-    
-    if alice_score > bob_score:
-        return "Alice", alice_score
-    elif bob_score > alice_score:
-        return "Bob", bob_score
-    else:
-        return "Draw", alice_score
-
-# Example input
-S = "banana"
-winner, score = calculate_score(S)
-print("Winner:", winner)
-print("Score:", score)
+SELECT * FROM Employee;
+DROP TABLE Employee;
