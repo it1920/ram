@@ -1,94 +1,552 @@
+#include<mpi.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
 
-CREATE DATABASE CompanyDB;
-USE CompanyDB;
+// we can run only one file  in a project to get output so make other main as like "main1" or something ..
+int main1()
+{
+	int np;
+	int pid;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+	if (np != 4)
+	{
+		if (pid == 0)
+		{
+			printf("Error:the system need 4 processor");
+		}
+		MPI_Finalize();
+		return 1;
+	}
+	if (pid == 0)
+	{
+		int receiveA[4];
+		int localC[4] = {};
+		int ResultC[4][4] = {};
+		int A[4][4] = {
+		{2, 1, 7, 5},
+		{1, 1, 8, 7},
+		{0, 1, 3, 1},
+		{3, 9, 3, 2}
+		};
+		int B[4][4] = {
+			{3, 5, 9, 7},
+			{0, 2, 2, 5},
+			{1, 8, 9, 2},
+			{1, 2, 9, 7}
+		};
+		for (int i = 1; i < np; i++)
+		{
+			MPI_Send(&A[i], 4, MPI_INT, i, 50, MPI_COMM_WORLD);
+			MPI_Send(&B, 16, MPI_INT, i, 51, MPI_COMM_WORLD);
+		}
+		// Process 0 keeps the first row of A
+		memcpy(receiveA, A[0], 4 * sizeof(int));
 
-CREATE TABLE Location (
-    Location_ID INT PRIMARY KEY,
-    Regional_Group VARCHAR(255)
-);
+		for (int i = 0; i < 4; i++)
+		{
+			for (int k = 0; k < 4; k++)
+			{
+				localC[i] += receiveA[k] * B[k][i];
+			}
+		}
+		printf("pid is %d and  local matrix is:", pid);
+		for (int i = 0; i < 4; i++)
+		{
+			printf("%d ", localC[i]);
+			ResultC[0][i] = localC[i];
+		}
+		printf("\n");
+	
+		//receiving matrix from processors 1-3
+		for (int i = 1; i < np; i++)
+		{
+			MPI_Recv(&ResultC[i], 4, MPI_INT, i, 52, MPI_COMM_WORLD, &sta);
+		}
 
-CREATE TABLE Job (
-    Job_Id INT PRIMARY KEY,
-    JobRole VARCHAR(255)
-);
+		printf("Resultant matrix C is: \n");
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				printf("%d ", ResultC[i][j]);
+			}
+			printf("\n");
+		}
+	}
+	else if (pid < np)
+	{
+		int receiveA[4];
+		int receiveB[4][4];
+		int matC[4] = {};
+		MPI_Recv(&receiveA, 4, MPI_INT, 0, 50, MPI_COMM_WORLD, &sta);
+		MPI_Recv(&receiveB, 16, MPI_INT, 0, 51, MPI_COMM_WORLD, &sta);
 
-CREATE TABLE Department (
-    Department_Id INT PRIMARY KEY,
-    Name VARCHAR(255),
-    Location_Id INT,
-    FOREIGN KEY (Location_Id) REFERENCES Location(Location_ID)
-);
+		for (int i = 0; i < 4; i++)
+		{
+			for (int k = 0; k < 4; k++)
+			{
+				matC[i] += receiveA[k] * receiveB[k][i];
+			}
+		}
+		printf("pid is %d and  local matrix is:", pid);
+		for (int i = 0; i < 4; i++)
+		{
+			printf("%d ", matC[i]);
+		}
+		printf("\n");
+		MPI_Send(&matC, 4, MPI_INT, 0, 52, MPI_COMM_WORLD);
+	}
 
-CREATE TABLE Employee (
-    Employee_Id INT PRIMARY KEY,
-    Last_Name VARCHAR(255),
-    First_Name VARCHAR(255),
-    Middle_Name CHAR(1),
-    Job_Id INT,
-    Manager_Id INT,
-    Hire_Date DATE,
-    Salary INT,
-    Comm VARCHAR(255),
-    Department_Id INT,
-    FOREIGN KEY (Job_Id) REFERENCES Job(Job_Id),
-    FOREIGN KEY (Department_Id) REFERENCES Department(Department_Id)
-);
-SHOW CREATE TABLE Location;
-SHOW CREATE TABLE Job;
-SHOW CREATE TABLE Department;
-SHOW CREATE TABLE Employee;
+	MPI_Finalize();
+	return 0;
+}
 
-SELECT * FROM Location;
-SELECT * FROM Job;
-SELECT * FROM Department;
-SELECT * FROM Employee;
 
-SELECT LOWER(Regional_Group) FROM Location;
-SELECT First_Name, Last_Name, Salary * 12 AS Annual_Salary FROM Employee;
-SELECT CONCAT(Last_Name, ' ', Middle_Name, '. ', First_Name) AS Full_Name FROM Employee;
-SELECT * FROM Employee WHERE Last_Name NOT LIKE '%S%';
-SELECT * FROM Employee WHERE Department_Id IN (20, 30);
-SELECT * FROM Employee WHERE Department_Id IN (20, 30);
-SELECT * FROM Employee WHERE Comm IS NULL;
-SELECT Department_Id, MAX(Salary) AS Max_Salary, MIN(Salary) AS Min_Salary, AVG(Salary) AS Avg_Salary 
-FROM Employee 
-GROUP BY Department_Id;
-SELECT COUNT(*) FROM Employee WHERE YEAR(Hire_Date) = 1985;
-SELECT * FROM Employee WHERE Salary = (SELECT MAX(Salary) FROM Employee);
-SELECT d.Name, COUNT(e.Employee_Id) AS Total_Employees
-FROM Department d
-LEFT JOIN Employee e ON d.Department_Id = e.Department_Id
-GROUP BY d.Department_Id;
-SELECT d.Name 
-FROM Department d
-JOIN Employee e ON d.Department_Id = e.Department_Id
-GROUP BY d.Name
-HAVING COUNT(e.Employee_Id) >= 3
-ORDER BY d.Name ASC;
-SELECT l.Regional_Group, e.Salary
-FROM Employee e
-JOIN Department d ON e.Department_Id = d.Department_Id
-JOIN Location l ON d.Location_Id = l.Location_ID
-WHERE e.Salary = (SELECT MAX(Salary) FROM Employee);
-SELECT l.Regional_Group, e.Salary
-FROM Employee e
-JOIN Department d ON e.Department_Id = d.Department_Id
-JOIN Location l ON d.Location_Id = l.Location_ID
-WHERE e.Salary = (SELECT MAX(Salary) FROM Employee);
-SELECT j.JobRole, COUNT(e.Employee_Id) AS Num_Employees, AVG(e.Salary) AS Avg_Salary
-FROM Job j
-JOIN Employee e ON j.Job_Id = e.Job_Id
-WHERE j.JobRole LIKE '%LE%'
-GROUP BY j.JobRole
-HAVING COUNT(e.Employee_Id) > 1
-ORDER BY Avg_Salary DESC;
-CREATE TABLE `Job-Clone` LIKE Job;
-INSERT INTO `Job-Clone` SELECT * FROM Job;
-ALTER TABLE Employee CHANGE Comm Commission VARCHAR(255);
-UPDATE Employee e
-JOIN Department d ON e.Department_Id = d.Department_Id
-SET e.Salary = e.Salary * 1.1
-WHERE d.Name = 'Sales';
 
-SELECT * FROM Employee;
-DROP TABLE Employee;
+
+
+
+
+
+
+
+#include <iostream>
+#include <mpi.h>
+#include<stdio.h>
+#include <string.h> 
+
+int main()
+{
+	int np;
+	int pid;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+	if (np != 8)
+	{
+		if (pid == 0)
+		{
+			printf("Error:The parallel system has 8 processors");
+		}
+		MPI_Finalize();
+		return 1;
+	}
+	if (pid == 0) {
+		char sendmsg[8][8] = { {'a','c','a','d','e','m','i','c'},
+								{'o','r','g','a','n','i','z','e'},
+								{'h','u','m','a','n','i','t','y'},
+								{'v','o','l','o','t','i','l','e'},
+								{'p','e','a','c','e','f','u','l'},
+								{'c','a','l','e','n','d','a','r'},
+								{'k','e','y','b','o','a','r','d'},
+								{'r','e','s','e','a','r','c','h'},
+		};
+		char receive[9];
+		for (int i = 1; i < np; i++)
+		{
+			MPI_Send(&sendmsg[i], 8, MPI_CHAR, i, 50, MPI_COMM_WORLD);
+			
+		}
+		strncpy_s(receive, sendmsg[0], 8);
+		receive[8] = '\0'; // Null-terminate
+		printf("\n My process id is  %d  I received ", pid);
+		for (int i = 0; i < 8; i++)
+		{
+			
+			printf("%c ", receive[i]);
+		}
+		printf("\n");
+
+		printf("ASCII format of the Character set is ");
+		for (int i = 0; i < 8; i++)
+		{
+			
+			char x = receive[i];
+			int ascii = int(x);
+			printf("%d ",ascii);
+			
+		}
+		printf("\n");
+		// print the binary format received from pid 0
+		printf("\nReceived from %d and binary format is \n", pid);
+		for (int i = 0; i < 8; i++)
+		{
+			int bin[8] = {};
+			char x = receive[i];
+			int ascii = int(x);
+			int j = 7;
+			while (ascii != 0)
+			{
+				
+				bin[j] = ascii % 2;
+				j--;
+				ascii = ascii / 2;
+			}
+		
+			for (int k = 0; k< 8; k++) {
+				printf("%d", bin[k]);
+			}
+	
+		}
+		printf("\n ");
+		
+		// print the binary format received from other processors
+		int receiveBin[64];
+		for (int i = 1; i < np; i++)
+		{
+			
+			MPI_Recv(receiveBin, 64, MPI_INT, i, 51, MPI_COMM_WORLD, &sta);
+			
+			printf("\nReceived from %d and binary format is \n", i);
+			for (int j = 0; j < 64; j++)
+			{
+				printf("%d", receiveBin[j]);
+			}
+			printf("\n");
+		}
+		printf("\n");
+	}
+	
+
+	else if (pid < 8) {
+		
+		char receive[9];
+		MPI_Recv(&receive, 8, MPI_CHAR, 0, 50, MPI_COMM_WORLD, &sta);
+		
+		receive[8] = '\0';
+		printf("My process id is  %d  I received ", pid);
+		for (int i = 0; i < 8; i++)
+		{
+
+			printf("%c ", receive[i]);
+		}
+		printf("\n");
+
+		printf("ASCII format of the Character set is ");
+		for (int i = 0; i < 8; i++)
+		{
+			char x = receive[i];
+			int ascii = int(x);
+			printf("%d ", ascii);
+		}
+		printf("\n");
+
+		int bindata[64] = {};
+		for (int i = 0; i < 8; i++)
+		{
+			int bin[8] = {};
+			char x = receive[i];
+			int ascii = int(x);
+			int j = 7;
+			while (ascii != 0)
+			{
+
+				bin[j] = ascii % 2;
+				j--;
+				ascii = ascii / 2;
+			}
+			for (int j = 0; j < 8; j++) {
+				bindata[i * 8 + j] = bin[j];
+				
+			}
+
+		}
+		
+		printf("\n");
+		MPI_Send(bindata, 64, MPI_INT, 0, 51, MPI_COMM_WORLD);
+	
+	}
+	MPI_Finalize();
+	return 0;
+}
+
+
+
+
+
+
+#include <mpi.h>
+#include <stdio.h>
+int main()
+{
+	int np;
+	int pid;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+	int arr[6];
+	int total;
+	if (pid == 0)
+	{
+		arr[0] = 1;
+		arr[1] = 2;
+		arr[2] = 3;
+		arr[3] = 4;
+		arr[4] = 5;
+		arr[5] = 6;
+	}
+	int recvarr[2];
+	MPI_Scatter(&arr, 2, MPI_INT, &recvarr, 2, MPI_INT, 0, MPI_COMM_WORLD);
+	printf("\nMy processor id is %d.Received Data are ", pid);
+	printf("%d and %d", recvarr[0], recvarr[1]);
+	int sum = recvarr[0] + recvarr[1];
+	MPI_Reduce(&sum, &total, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	/*
+	MPI Reduction operations
+	-------------------------
+	MPI_MAX - Returns the maximum element.
+	MPI_MIN - Returns the minimum element.
+	MPI_SUM - Sums the elements.
+	MPI_PROD - Multiplies all elements.
+	MPI_LAND - Performs a logical and across the elements.
+	MPI_LOR - Performs a logical or across the elements.
+	MPI_BAND - Performs a bitwise and across the bits of the elements.
+	MPI_BOR - Performs a bitwise or across the bits of the elements.
+	MPI_MAXLOC - Returns the maximum value and the rank of the process that owns it.
+	MPI_MINLOC - Returns the minimum value and the rank of the process that owns it.
+	*/
+	if (pid == 0)
+	{
+		printf("\nMy processor id is %d.Total received is %d", pid, total);
+	}
+	MPI_Finalize();
+	return 0;
+}
+
+
+
+
+
+#include<mpi.h>
+#include<stdio.h>
+#include<stdlib.h>
+int main()
+{
+	int np;
+	int pid;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+	int mul;
+	int arr[6];
+	int recvarray[6];
+	if (pid == 0)
+	{
+		mul = 2;
+		arr[0] = 1;
+		arr[1] = 2;
+		arr[2] = 3;
+		arr[3] = 4;
+		arr[4] = 5;
+		arr[5] = 6;
+	}
+	MPI_Bcast(&mul, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	int recvarr[1];
+	MPI_Scatter(&arr, 1, MPI_INT, &recvarr, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	printf("My processor id is %d.Received Data is %d and ", pid, mul);
+	printf("%d\n", recvarr[0]);
+	int value = mul * recvarr[0];
+	printf("The value I sent is %d\n", value);
+	MPI_Gather(&value, 1, MPI_INT, &recvarray, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	if (pid == 0)
+	{
+		printf("The value array I received is ");
+		for (int i = 0;i < 6;i++)
+		{
+			printf("%d ", recvarray[i]);
+		}
+		printf("\n");
+	}
+	MPI_Finalize();
+	return 0;
+}
+
+
+
+
+#include <mpi.h>
+#include <stdio.h>
+int main()
+{
+	int np;
+	int pid;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+	int arr[6];
+	if (pid == 0)
+	{
+		arr[0] = 1;
+		arr[1] = 2;
+		arr[2] = 3;
+		arr[3] = 4;
+		arr[4] = 5;
+		arr[5] = 6;
+	}
+	int recvarr[2];
+	MPI_Scatter(&arr, 2, MPI_INT, &recvarr, 2, MPI_INT, 0, MPI_COMM_WORLD);
+	printf("My processor id is %d.Received Data is\n", pid);
+	for (int i = 0;i < 2;i++)
+	{
+		printf("%d ", recvarr[i]);
+	}
+	printf("\n");
+	MPI_Finalize();
+	return 0;
+}
+
+
+
+
+
+#include <mpi.h>
+#include <stdio.h>
+int main()
+{
+	int np;
+	int pid;
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+	int a;
+	if (pid == 0)
+	{
+		a = 30;
+	}
+	MPI_Bcast(&a, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	printf("My processor id is %d.Received Data is %d\n", pid, a);
+	MPI_Finalize();
+	return 0;
+}
+
+
+#include <mpi.h>
+#include <stdio.h>
+
+int main()
+{
+	int np;
+	int pid;
+
+	MPI_Init(NULL, NULL);
+	MPI_Comm_size(MPI_COMM_WORLD, &np);
+	MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+	MPI_Status sta;
+
+	if (np != 4)
+	{
+		if (pid == 0)
+		{
+			printf("Please rerun the program with 4 processes.\n");
+			MPI_Finalize();
+			return 0;
+		}
+	}
+
+	int mat_arr_a[4][4];
+	int mat_arr_b[4][4];
+	int recv_mat_arr_a[4];
+	int result_mat[4][4];
+
+	if (pid == 0)
+	{
+		mat_arr_a[0][0] = 2;
+		mat_arr_a[0][1] = 1;
+		mat_arr_a[0][2] = 7;
+		mat_arr_a[0][3] = 5;
+		mat_arr_a[1][0] = 1;
+		mat_arr_a[1][1] = 1;
+		mat_arr_a[1][2] = 8;
+		mat_arr_a[1][3] = 7;
+		mat_arr_a[2][0] = 0;
+		mat_arr_a[2][1] = 1;
+		mat_arr_a[2][2] = 3;
+		mat_arr_a[2][3] = 1;
+		mat_arr_a[3][0] = 3;
+		mat_arr_a[3][1] = 9;
+		mat_arr_a[3][2] = 3;
+		mat_arr_a[3][3] = 2;
+
+		mat_arr_b[0][0] = 3;
+		mat_arr_b[0][1] = 5;
+		mat_arr_b[0][2] = 9;
+		mat_arr_b[0][3] = 7;
+		mat_arr_b[1][0] = 0;
+		mat_arr_b[1][1] = 2;
+		mat_arr_b[1][2] = 2;
+		mat_arr_b[1][3] = 5;
+		mat_arr_b[2][0] = 1;
+		mat_arr_b[2][1] = 8;
+		mat_arr_b[2][2] = 9;
+		mat_arr_b[2][3] = 2;
+		mat_arr_b[3][0] = 1;
+		mat_arr_b[3][1] = 2;
+		mat_arr_b[3][2] = 9;
+		mat_arr_b[3][3] = 7;
+
+		// Keep row 0 at process 0
+		for (int i = 0; i < 4; i++)
+		{
+			recv_mat_arr_a[i] = mat_arr_a[0][i];
+		}
+
+		// Distribute rows to all other processes
+		for (int i = 1; i < 4; i++)
+		{
+			MPI_Send(&mat_arr_a[i], 4, MPI_INT, i, 808, MPI_COMM_WORLD);
+		}
+
+	}
+	else
+	{
+		MPI_Recv(&recv_mat_arr_a, 4, MPI_INT, 0, 808, MPI_COMM_WORLD, &sta);
+	}
+
+	// Broadcast matrix B
+	MPI_Bcast(&mat_arr_b, 16, MPI_INT, 0, MPI_COMM_WORLD);
+
+	// Calculate row sum for all processes
+	int row_total[4] = { 0 };
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			row_total[i] += recv_mat_arr_a[j] * mat_arr_b[j][i];
+		}
+	}
+	printf("PID %d's Local sum: ", pid);
+	for (int i = 0; i < 4; i++)
+	{
+		printf("%d ", row_total[i]);
+	}
+	printf("\n");
+
+	MPI_Gather(&row_total, 4, MPI_INT, &result_mat, 4, MPI_INT, 0, MPI_COMM_WORLD);
+	
+	if (pid == 0)
+	{
+		printf("Resultant matrix: \n");
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				printf("%d\t", result_mat[i][j]);
+			}
+			printf("\n");
+		}
+	}
+
+	MPI_Finalize();
+	return 0;
+}
+
+
